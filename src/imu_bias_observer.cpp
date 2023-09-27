@@ -28,7 +28,7 @@ public:
     imuBiasObserverNode() :
             Node("imu_bias_observer_node")
     {
-        bias_pub = this->create_publisher<geometry_msgs::msg::Vector3Stamped>("bias_topic_out", 10);
+        bias_pub = this->create_publisher<sensor_msgs::msg::Imu>("bias_topic_out", 10);
 
         imu_subscription = this->create_subscription<sensor_msgs::msg::Imu>("imu_topic_in", 10,
                                                                             std::bind(&imuBiasObserverNode::imuMsgCallback, this,
@@ -44,11 +44,14 @@ private:
     double angular_velocity_sum_x = 0.0;
     double angular_velocity_sum_y = 0.0;
     double angular_velocity_sum_z = 0.0;
+    double linear_acceleration_sum_x = 0.0;
+    double linear_acceleration_sum_y = 0.0;
+    double linear_acceleration_sum_z = 0.0;
     int number_of_samples = 0;
     int target_observation_samples = 4000;
     bool observe_now = false;
 
-    rclcpp::Publisher<geometry_msgs::msg::Vector3Stamped>::SharedPtr bias_pub;
+    rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr bias_pub;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription;
 
     void imuMsgCallback(const sensor_msgs::msg::Imu::SharedPtr imu_msg) {
@@ -59,6 +62,9 @@ private:
                 angular_velocity_sum_x += imu_msg->angular_velocity.x;
                 angular_velocity_sum_y += imu_msg->angular_velocity.y;
                 angular_velocity_sum_z += imu_msg->angular_velocity.z;
+                linear_acceleration_sum_x += imu_msg->linear_acceleration.x;
+                linear_acceleration_sum_y += imu_msg->linear_acceleration.y;
+                linear_acceleration_sum_z += imu_msg->linear_acceleration.z;
                 number_of_samples += 1;
 
                 if(number_of_samples % (target_observation_samples/5) == 0){
@@ -68,11 +74,14 @@ private:
             }
             else
             {
-                geometry_msgs::msg::Vector3Stamped bias_msg;
+                sensor_msgs::msg::Imu bias_msg;
                 bias_msg.header.stamp = this->now();
-                bias_msg.vector.x = angular_velocity_sum_x / double(number_of_samples);
-                bias_msg.vector.y = angular_velocity_sum_y / double(number_of_samples);
-                bias_msg.vector.z = angular_velocity_sum_z / double(number_of_samples);
+                bias_msg.angular_velocity.x = angular_velocity_sum_x / double(number_of_samples);
+                bias_msg.angular_velocity.y = angular_velocity_sum_y / double(number_of_samples);
+                bias_msg.angular_velocity.z = angular_velocity_sum_z / double(number_of_samples);
+                bias_msg.linear_acceleration.x = linear_acceleration_sum_x / double(number_of_samples);
+                bias_msg.linear_acceleration.y = linear_acceleration_sum_y / double(number_of_samples);
+                bias_msg.linear_acceleration.z = linear_acceleration_sum_z / double(number_of_samples);
                 bias_pub->publish(bias_msg);
 
                 observe_now = false;
