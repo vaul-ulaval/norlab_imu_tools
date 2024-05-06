@@ -19,6 +19,8 @@
 #include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <geometry_msgs/msg/vector3_stamped.hpp>
+#include <std_msgs/msg/string.hpp>
+#include <std_msgs/msg/color_rgba.hpp>
 #include <cmath>
 #include <sstream>
 
@@ -33,6 +35,9 @@ public:
         imu_subscription = this->create_subscription<sensor_msgs::msg::Imu>("imu_topic_in", 10,
                                                                             std::bind(&imuBiasObserverNode::imuMsgCallback, this,
                                                                                       std::placeholders::_1));
+
+        led_mode_pub = this->create_publisher<std_msgs::msg::String>("/leds/mode", 10);
+        led_color_pub = this->create_publisher<std_msgs::msg::ColorRGBA>("/leds/color", 10);
 
         this->declare_parameter<int>("target_observation_samples", 4000);
         this->get_parameter("target_observation_samples", target_observation_samples);
@@ -53,10 +58,14 @@ private:
 
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr bias_pub;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr led_mode_pub;
+    rclcpp::Publisher<std_msgs::msg::ColorRGBA>::SharedPtr led_color_pub;
+
 
     void imuMsgCallback(const sensor_msgs::msg::Imu::SharedPtr imu_msg) {
         if(observe_now)
         {
+            start_leds_blinking();
             if(number_of_samples <= target_observation_samples)
             {
                 angular_velocity_sum_x += imu_msg->angular_velocity.x;
@@ -86,12 +95,33 @@ private:
 
                 observe_now = false;
                 RCLCPP_WARN(this->get_logger(), "IMU bias observer: Done, publishing the result and shutting down.");
-
+                stop_leds_blinking();
             }
 
         }
     }
+
+    void start_leds_blinking()
+    {
+        std_msgs::msg::String mode_msg;
+        mode_msg.data = "blink";
+        led_mode_pub->publish(mode_msg);
+    }
+
+    void stop_leds_blinking()
+    {
+        std_msgs::msg::String mode_msg;
+        mode_msg.data = "normal";
+        led_mode_pub->publish(mode_msg);
+
+        std_msgs::msg::ColorRGBA color_msg;
+        color_msg.r = 150.0;
+        color_msg.g = 180.0;
+        color_msg.b = 0.0;
+        led_color_pub->publish(color_msg);
+    }
 };
+
 
 int main(int argc, char** argv)
 {
