@@ -1,78 +1,50 @@
 cmake_minimum_required(VERSION 3.8)
 project(norlab_imu_tools)
 
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclpy REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(tf2 REQUIRED)
-find_package(tf2_geometry_msgs REQUIRED)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+find_package(ament_cmake_auto REQUIRED)
+
+ament_auto_find_build_dependencies()
 
 include_directories(
         ${norlab_imu_tools_INCLUDE_DIRS}
 )
 
+ament_auto_add_library(${PROJECT_NAME} SHARED
+  src/imu_bias_observer.cpp
+  src/imu_and_wheel_odom_node.cpp
+  src/imu_bias_compensator_node.cpp
+)
+
+rclcpp_components_register_node(${PROJECT_NAME}
+  PLUGIN norlab_imu_tools::imuAndWheelOdomNode
+  EXECUTABLE imu_and_wheel_odom_node
+)
+
+rclcpp_components_register_node(${PROJECT_NAME}
+  PLUGIN norlab_imu_tools::imuBiasCompensatorNode
+  EXECUTABLE imu_bias_compensator_node
+)
+
+rclcpp_components_register_node(${PROJECT_NAME}
+  PLUGIN norlab_imu_tools::imuBiasObserverNode
+  EXECUTABLE imu_bias_observer_node
+)
+
 install(DIRECTORY launch
-        DESTINATION share/${PROJECT_NAME})
+        DESTINATION share/${PROJECT_NAME}
+)
 
-add_executable(imu_bias_observer src/imu_bias_observer.cpp)
-ament_target_dependencies(imu_bias_observer
-        rclcpp
-        rclpy
-        std_msgs
-        nav_msgs
-        sensor_msgs
-        tf2_ros
-        tf2
-        tf2_geometry_msgs
-        )
-#rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
-target_link_libraries(imu_bias_observer "${cpp_typesupport_target}")
 ament_export_dependencies(rosidl_default_runtime)
-install(TARGETS imu_bias_observer
-        DESTINATION lib/${PROJECT_NAME}
-        )
-
-add_executable(imu_and_wheel_odom_node src/imu_and_wheel_odom_node.cpp)
-ament_target_dependencies(imu_and_wheel_odom_node
-        rclcpp
-        rclpy
-        std_msgs
-        sensor_msgs
-        nav_msgs
-        tf2_ros
-        tf2
-        tf2_geometry_msgs
-        )
-target_link_libraries(imu_and_wheel_odom_node "${cpp_typesupport_target}")
-ament_export_dependencies(rosidl_default_runtime)
-install(TARGETS imu_and_wheel_odom_node
-        DESTINATION lib/${PROJECT_NAME}
-        )
-
-add_executable(imu_bias_compensator_node src/imu_bias_compensator_node.cpp)
-ament_target_dependencies(imu_bias_compensator_node
-        rclcpp
-        rclpy
-        std_msgs
-        sensor_msgs
-        nav_msgs
-        tf2_ros
-        tf2
-        tf2_geometry_msgs
-        )
-#rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
-target_link_libraries(imu_bias_compensator_node "${cpp_typesupport_target}")
-ament_export_dependencies(rosidl_default_runtime)
-install(TARGETS imu_bias_compensator_node
-        DESTINATION lib/${PROJECT_NAME}
-        )
 
 ament_package()

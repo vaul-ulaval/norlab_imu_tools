@@ -20,11 +20,13 @@
 
 #define MISSED_ODOM_MSG_SAFETY_MULTIPLIER 6.0
 
+namespace norlab_imu_tools
+{
 class imuAndWheelOdomNode : public rclcpp::Node
 {
 public:
-    imuAndWheelOdomNode() :
-            Node("imu_and_wheel_odom_node")
+    imuAndWheelOdomNode(const rclcpp::NodeOptions& options) :
+            Node("imu_and_wheel_odom_node", options)
         {
 //            ros::init(argc, argv, ROS_PACKAGE_NAME);
             double p_wheel_odom_expected_rate = 20.0;
@@ -298,11 +300,8 @@ private:
     }
 
 };
+};
 
-int main(int argc, char **argv) {
+#include "rclcpp_components/register_node_macro.hpp"  // NOLINT
 
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<imuAndWheelOdomNode>());
-    rclcpp::shutdown();
-    return 0;
-}
+RCLCPP_COMPONENTS_REGISTER_NODE(norlab_imu_tools::imuAndWheelOdomNode)

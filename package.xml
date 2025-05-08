@@ -8,23 +8,24 @@
   <maintainer email="kubelvla@gmail.com">Vladimir Kubelka</maintainer>
   <license>BSD</license>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+
+  <build_depend>rosidl_default_generators</build_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
 
   <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
   <depend>rclpy</depend>
   <depend>std_msgs</depend>
   <depend>sensors_msgs</depend>
+  <depend>nav_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
-  <depend>gps_common</depend>
+  <depend>tf2_geometry_msgs</depend>
   <depend>interactive_markers</depend>
   <depend>visualization_msgs</depend>
 
-  <build_depend>rosidl_default_generators</build_depend>
-
   <exec_depend>rosidl_default_runtime</exec_depend>
-
-  <member_of_group>rosidl_interface_packages</member_of_group>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -12,7 +12,7 @@
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/utils.h>
 #include <tf2/transform_datatypes.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
@@ -24,11 +24,12 @@
 #include <cmath>
 #include <sstream>
 
+namespace norlab_imu_tools {
 class imuBiasObserverNode : public rclcpp::Node
 {
 public:
-    imuBiasObserverNode() :
-            Node("imu_bias_observer_node")
+    imuBiasObserverNode(const rclcpp::NodeOptions& options) :
+            Node("imu_bias_observer_node", options)
     {
         bias_pub = this->create_publisher<sensor_msgs::msg::Imu>("bias_topic_out", 10);
 
@@ -77,7 +78,7 @@ private:
                 number_of_samples += 1;
 
                 if(number_of_samples % (target_observation_samples/5) == 0){
-                    RCLCPP_INFO(this->get_logger(), "IMU bias observer: Collected %d samples (%d\%) of %d.", number_of_samples, (100*number_of_samples/target_observation_samples), target_observation_samples);
+                    RCLCPP_INFO(this->get_logger(), "IMU bias observer: Collected %d samples (%d%%) of %d.", number_of_samples, (100*number_of_samples/target_observation_samples), target_observation_samples);
                 }
 
             }
@@ -121,14 +122,8 @@ private:
         led_color_pub->publish(color_msg);
     }
 };
+};
 
+#include "rclcpp_components/register_node_macro.hpp"  // NOLINT
 
-int main(int argc, char** argv)
-{
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<imuBiasObserverNode>());
-    rclcpp::sleep_for(std::chrono::nanoseconds (std::chrono::seconds(1)));
-    rclcpp::shutdown();
-    return 0;
-}
-
+RCLCPP_COMPONENTS_REGISTER_NODE(norlab_imu_tools::imuBiasObserverNode)

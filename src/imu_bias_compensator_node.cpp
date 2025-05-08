@@ -5,11 +5,13 @@
 #include <cmath>
 #include <sstream>
 
+namespace norlab_imu_tools
+{
 class imuBiasCompensatorNode : public rclcpp::Node
 {
 public:
-    imuBiasCompensatorNode() :
-            Node("imu_bias_compensator_node")
+    imuBiasCompensatorNode(const rclcpp::NodeOptions& options) :
+            Node("imu_bias_compensator_node", options)
     {
         biasSub = this->create_subscription<sensor_msgs::msg::Imu>("bias_topic_in", 10,
                                                                                 std::bind(&imuBiasCompensatorNode::biasMsgCallback, this,
@@ -61,11 +63,9 @@ private:
         }
     }
 };
+};
 
-int main(int argc, char** argv)
-{
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<imuBiasCompensatorNode>());
-    rclcpp::shutdown();
-    return 0;
-}
+
+#include "rclcpp_components/register_node_macro.hpp"  // NOLINT
+
+RCLCPP_COMPONENTS_REGISTER_NODE(norlab_imu_tools::imuBiasCompensatorNode)
